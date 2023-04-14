@@ -140,11 +140,7 @@ class ManheimConfig(object):
             if acct_conf['account_name'] == account_name:
                 acct_conf['config_path'] = path
                 return ManheimConfig(**acct_conf)
-        raise RuntimeError(
-            'ERROR: No account with name "%s" in %s' % (
-                account_name, path
-            )
-        )
+        raise RuntimeError(f'ERROR: No account with name "{account_name}" in {path}')
 
     @staticmethod
     def list_accounts(path):
@@ -179,7 +175,7 @@ class ManheimConfig(object):
         :rtype: ManheimConfig
         """
         d = {'config_path': self.config_path}
-        d.update(self._config)
+        d |= self._config
         # AWS_REGION replacement
         config_str = yaml.dump(
             d, Dumper=yaml.Dumper
@@ -188,7 +184,7 @@ class ManheimConfig(object):
         for k, v in os.environ.items():
             if not k.startswith('POLICYGEN_ENV_'):
                 continue
-            config_str = config_str.replace('%%' + k + '%%', v)
+            config_str = config_str.replace(f'%%{k}%%', v)
         return ManheimConfig(**yaml.load(config_str, Loader=yaml.SafeLoader))
 
     def __getattr__(self, k):

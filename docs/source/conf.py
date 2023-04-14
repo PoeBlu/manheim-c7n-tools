@@ -415,22 +415,18 @@ def label_ref_node(docname, ref_to, title):
     """Generate a node that references a label"""
     txt = Text(title, rawsource=title)
     newchild = inline(
-        ':ref:`%s`' % ref_to,
-        '',
-        txt,
-        classes=['xref', 'std', 'std-ref']
+        f':ref:`{ref_to}`', '', txt, classes=['xref', 'std', 'std-ref']
     )
-    newnode = pending_xref(
-        ':ref:`%s`' % ref_to,
+    return pending_xref(
+        f':ref:`{ref_to}`',
         newchild,
         reftype='ref',
         refwarn='True',
         reftarget=ref_to,
         refexplicit='False',
         refdomain='std',
-        refdoc=docname
+        refdoc=docname,
     )
-    return newnode
 
 
 def meth_ref_node(docname, ref_to, title=None):
@@ -439,22 +435,18 @@ def meth_ref_node(docname, ref_to, title=None):
         title = ref_to
     txt = Text(title, rawsource=title)
     newchild = literal(
-        ':py:meth:`%s`' % ref_to,
-        '',
-        txt,
-        classes=['xref', 'py', 'py-meth']
+        f':py:meth:`{ref_to}`', '', txt, classes=['xref', 'py', 'py-meth']
     )
-    newnode = pending_xref(
-        ':py:meth:`%s`' % ref_to,
+    return pending_xref(
+        f':py:meth:`{ref_to}`',
         newchild,
         reftype='meth',
         refwarn='True',
         reftarget=ref_to,
         refexplicit='False',
         refdomain='py',
-        refdoc=docname
+        refdoc=docname,
     )
-    return newnode
 
 
 def on_doctree_read(_, doctree):

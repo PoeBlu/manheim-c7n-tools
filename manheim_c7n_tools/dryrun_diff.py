@@ -94,10 +94,8 @@ class DryRunDiffer(object):
             x = x.strip()
             if x == '':
                 continue
-            m = polname_re.match(x)
-            if not m:
-                continue
-            pnames.append(m.group(1))
+            if m := polname_re.match(x):
+                pnames.append(m[1])
         return pnames
 
     def _make_diff_markdown(self, dryrun):
@@ -113,10 +111,10 @@ class DryRunDiffer(object):
         all_policies = list(set(
             list(dryrun.keys()) + list(self._live_results.keys())
         ))
-        if len(all_policies) == 0:
+        if not all_policies:
             return 'No policy reports found. Perhaps all changed policies ' \
-                   'are event-based instead of periodic?\n'
-        maxlen = max([len(x) for x in all_policies])
+                       'are event-based instead of periodic?\n'
+        maxlen = max(len(x) for x in all_policies)
         fmt = '%s %{maxlen}s   %6s   %6s   %6s   \n'.format(maxlen=maxlen)
         linelen = 30 + maxlen
         res = '```diff\n'
@@ -173,8 +171,8 @@ class DryRunDiffer(object):
             if not m:
                 logger.error('ERROR: file path does not match regex: %s', f)
                 continue
-            region = m.group(1)
-            policy = m.group(2)
+            region = m[1]
+            policy = m[2]
             if policy not in pol_names and 'defaults' not in pol_names:
                 # policy isn't changed
                 continue
@@ -232,10 +230,10 @@ class DryRunDiffer(object):
         )
         if response['IsTruncated']:
             raise RuntimeError('ERROR: S3 response was truncated!')
-        result = []
-        for pname in response['CommonPrefixes']:
-            result.append(pname['Prefix'].replace('logs/', '').strip('/'))
-        return result
+        return [
+            pname['Prefix'].replace('logs/', '').strip('/')
+            for pname in response['CommonPrefixes']
+        ]
 
     def _get_latest_res_count_for_policy(self, bucket, pol_name):
         """
@@ -251,7 +249,7 @@ class DryRunDiffer(object):
         :rtype: int
         """
         newest = None
-        for obj in bucket.objects.filter(Prefix='logs/%s/' % pol_name):
+        for obj in bucket.objects.filter(Prefix=f'logs/{pol_name}/'):
             if not (
                 obj.key.endswith('/resources.json') or
                 obj.key.endswith('/resources.json.gz')
@@ -293,8 +291,7 @@ def parse_args(argv):
                    help='Config file path (default: ./manheim-c7n-tools.yml)')
     p.add_argument('ACCOUNT_NAME', type=str, action='store',
                    help='Account name in config file, to run diff for')
-    args = p.parse_args(argv)
-    return args
+    return p.parse_args(argv)
 
 
 def main():

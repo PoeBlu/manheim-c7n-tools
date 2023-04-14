@@ -131,7 +131,7 @@ class LambdaHealthChecker(object):
             interval=interval, group_name=group_name
         )
         if group_name is None:
-            group_name = '/aws/lambda/%s' % self._func_name
+            group_name = f'/aws/lambda/{self._func_name}'
         result = {}
         matchcount = 0
         for log in logs:
@@ -188,7 +188,7 @@ class LambdaHealthChecker(object):
         now = int(time()) * 1000
         cutoff = now - interval
         if group_name is None:
-            group_name = '/aws/lambda/%s' % self._func_name
+            group_name = f'/aws/lambda/{self._func_name}'
         logger.debug('Finding streams in CW Log Group: %s', group_name)
         paginator = self._logs.get_paginator('describe_log_streams')
         stream_iterator = paginator.paginate(
@@ -199,10 +199,11 @@ class LambdaHealthChecker(object):
         streams = []
         try:
             for resp in stream_iterator:
-                for stream in resp['logStreams']:
-                    if stream.get('lastEventTimestamp', 0) < cutoff:
-                        continue
-                    streams.append(stream['logStreamName'])
+                streams.extend(
+                    stream['logStreamName']
+                    for stream in resp['logStreams']
+                    if stream.get('lastEventTimestamp', 0) >= cutoff
+                )
         except Exception as ex:
             if hasattr(ex, 'response'):
                 emsg = ex.response.get('Error', {}).get('Code', 'unknown')
@@ -299,7 +300,7 @@ class LambdaHealthChecker(object):
                 Period=period,
                 Statistics=['Sum']
             )
-            val = sum([x['Sum'] for x in stats['Datapoints']])
+            val = sum(x['Sum'] for x in stats['Datapoints'])
             res[m.metric_name] = val
         logger.debug('Metrics for %s: %s', self._func_name, res)
         return res
@@ -323,7 +324,7 @@ class LambdaHealthChecker(object):
         if client is None:
             client = boto3.client('lambda', region_name=region_name)
         if isinstance(filter, type('')):
-            filter = re.compile('^' + re.escape(filter) + '.*')
+            filter = re.compile(f'^{re.escape(filter)}.*')
         logger.debug(
             'Finding Lambda function names matching: %s', filter.pattern
         )
@@ -395,8 +396,8 @@ class CustodianErrorReporter(object):
         """
         m = re.match(r'^arn:aws:sqs:[^:]+:(\d+):([^:]+)$', arn)
         assert m is not None
-        acct_id = m.group(1)
-        queue_name = m.group(2)
+        acct_id = m[1]
+        queue_name = m[2]
         logger.debug(
             'Looking up SQS Queue URL for ARN %s (owner=%s name=%s)',
             arn, acct_id, queue_name
@@ -435,11 +436,11 @@ class CustodianErrorReporter(object):
             )
             sleep(self.INTER_FUNC_SLEEP)
         self._ack_sqs()
-        req_ids = [
-            i for i in self._failed_request_ids
+        if req_ids := [
+            i
+            for i in self._failed_request_ids
             if self._failed_request_ids[i] is None
-        ]
-        if len(req_ids) > 0:
+        ]:
             print(
                 "\n\n" +
                 red('ERROR: %d failed Lambda RequestIDs could not be tied '
@@ -447,10 +448,9 @@ class CustodianErrorReporter(object):
                 "\n\n"
             )
         if errors:
-            print('Some lambda functions had errors in the last '
-                  '%s' % self.INVL_DESC)
+            print(f'Some lambda functions had errors in the last {self.INVL_DESC}')
             raise SystemExit(1)
-        print('No Lambda functions had errors in the last ' + self.INVL_DESC)
+        print(f'No Lambda functions had errors in the last {self.INVL_DESC}')
 
     def _get_sqs_dlq(self):
         """
@@ -461,7 +461,7 @@ class CustodianErrorReporter(object):
         count = 0
         msgs = [None]
         logger.info('Polling SQS queue: %s', self._dlq_url)
-        while len(msgs) > 0:
+        while msgs:
             response = self._sqs.receive_message(
                 QueueUrl=self._dlq_url,
                 WaitTimeSeconds=20,
@@ -534,10 +534,10 @@ class CustodianErrorReporter(object):
                     metrics['Invocations']
                 )
             )
-        if len(logs) < 1 and len(msg) == 0:
+        if len(logs) < 1 and not msg:
             print(green('%s: OK\n' % func_name))
             return True
-        print(red('%s: ERRORS' % func_name))
+        print(red(f'{func_name}: ERRORS'))
         for m in msg:
             print("\t%s" % red(m))
         if len(logs) < 1:
@@ -548,9 +548,14 @@ class CustodianErrorReporter(object):
                 continue
             events = logs[req_id]
             self._failed_request_ids[req_id] = func_name
-            print("\t" + red('RequestID=%s logGroupName=%s logStreamName=%s' % (
-                req_id, events[0]['logGroupName'], events[0]['logStreamName']
-            )))
+            print(
+                (
+                    "\t"
+                    + red(
+                        f"RequestID={req_id} logGroupName={events[0]['logGroupName']} logStreamName={events[0]['logStreamName']}"
+                    )
+                )
+            )
             for e in events:
                 print("\n".join([
                     "\t\t%s" % l.replace("\t", ' ')
@@ -577,10 +582,7 @@ def _name_value_dict(l):
     Given a list (``l``) containing dicts with ``Name`` and ``Value`` keys,
     return a single dict of Name -> Value.
     """
-    res = {}
-    for item in l:
-        res[item['Name']] = item['Value']
-    return res
+    return {item['Name']: item['Value'] for item in l}
 
 
 def parse_args(argv):
@@ -604,8 +606,7 @@ def parse_args(argv):
                    help='Account name to run errorscan against')
     p.add_argument('REGION_NAME', action='store', type=str,
                    help='AWS Region name to run errorscan against')
-    args = p.parse_args(argv)
-    return args
+    return p.parse_args(argv)
 
 
 def main():

@@ -56,7 +56,7 @@ class StepTester(object):
 class TestPolicygenStep(StepTester):
 
     def test_run(self):
-        with patch('%s.PolicyGen' % pbm, autospec=True) as mock_pg:
+        with patch(f'{pbm}.PolicyGen', autospec=True) as mock_pg:
             runner.PolicygenStep(None, self.m_conf).run()
         assert mock_pg.mock_calls == [
             call(self.m_conf),
@@ -64,7 +64,7 @@ class TestPolicygenStep(StepTester):
         ]
 
     def test_dryrun(self):
-        with patch('%s.PolicyGen' % pbm, autospec=True) as mock_pg:
+        with patch(f'{pbm}.PolicyGen', autospec=True) as mock_pg:
             runner.PolicygenStep(None, self.m_conf).dryrun()
         assert mock_pg.mock_calls == [
             call(self.m_conf),
@@ -83,8 +83,8 @@ class TestValidateStep(StepTester):
 
     def test_run(self):
         mock_conf = Mock(spec_set=ManheimConfig)
-        with patch('%s.validate' % pbm, autospec=True) as mock_validate:
-            with patch('%s.Config.empty' % pbm) as mock_empty:
+        with patch(f'{pbm}.validate', autospec=True) as mock_validate:
+            with patch(f'{pbm}.Config.empty') as mock_empty:
                 mock_empty.return_value = mock_conf
                 runner.ValidateStep('rName', self.m_conf).run()
         assert mock_validate.mock_calls == [call(mock_conf)]
@@ -94,8 +94,8 @@ class TestValidateStep(StepTester):
 
     def test_dryrun(self):
         mock_conf = Mock(spec_set=ManheimConfig)
-        with patch('%s.validate' % pbm, autospec=True) as mock_validate:
-            with patch('%s.Config.empty' % pbm) as mock_empty:
+        with patch(f'{pbm}.validate', autospec=True) as mock_validate:
+            with patch(f'{pbm}.Config.empty') as mock_empty:
                 mock_empty.return_value = mock_conf
                 runner.ValidateStep('rName', self.m_conf).dryrun()
         assert mock_validate.mock_calls == [call(mock_conf)]
@@ -112,14 +112,10 @@ class TestMugcStep(StepTester):
 
     def test_run(self):
         mock_conf = Mock(spec_set=ManheimConfig)
-        with patch(
-            '%s.resources.load_resources' % pbm, autospec=True
-        ) as mock_lr:
-            with patch('%s.Config.empty' % pbm) as mock_empty:
-                with patch('%s.load_policies' % pbm, autospec=True) as mock_lp:
-                    with patch(
-                        '%s.resources_gc_prefix' % pbm, autospec=True
-                    ) as mock_rgp:
+        with patch(f'{pbm}.resources.load_resources', autospec=True) as mock_lr:
+            with patch(f'{pbm}.Config.empty') as mock_empty:
+                with patch(f'{pbm}.load_policies', autospec=True) as mock_lp:
+                    with patch(f'{pbm}.resources_gc_prefix', autospec=True) as mock_rgp:
                         mock_empty.return_value = mock_conf
                         mock_lp.return_value = {'my': 'policies'}
                         runner.MugcStep('rName', self.m_conf).run()
@@ -142,14 +138,10 @@ class TestMugcStep(StepTester):
 
     def test_dryrun(self):
         mock_conf = Mock(spec_set=ManheimConfig)
-        with patch(
-            '%s.resources.load_resources' % pbm, autospec=True
-        ) as mock_lr:
-            with patch('%s.Config.empty' % pbm) as mock_empty:
-                with patch('%s.load_policies' % pbm, autospec=True) as mock_lp:
-                    with patch(
-                        '%s.resources_gc_prefix' % pbm, autospec=True
-                    ) as mock_rgp:
+        with patch(f'{pbm}.resources.load_resources', autospec=True) as mock_lr:
+            with patch(f'{pbm}.Config.empty') as mock_empty:
+                with patch(f'{pbm}.load_policies', autospec=True) as mock_lp:
+                    with patch(f'{pbm}.resources_gc_prefix', autospec=True) as mock_rgp:
                         mock_empty.return_value = mock_conf
                         mock_lp.return_value = {'my': 'policies'}
                         runner.MugcStep('rName', self.m_conf).dryrun()
@@ -186,8 +178,8 @@ class TestCustodianStep(StepTester):
             return_value='/cloud-custodian/ACCT/REGION'
         )
         mock_conf = Mock(spec_set=Config)
-        with patch('%s.run' % pbm) as mock_run:
-            with patch('%s.Config.empty' % pbm) as mock_empty:
+        with patch(f'{pbm}.run') as mock_run:
+            with patch(f'{pbm}.Config.empty') as mock_empty:
                 mock_empty.return_value = mock_conf
                 runner.CustodianStep('rName', self.m_conf).run()
         assert mock_run.mock_calls == [call(mock_conf)]
@@ -216,8 +208,8 @@ class TestCustodianStep(StepTester):
             return_value='/cloud-custodian/ACCT/REGION'
         )
         mock_conf = Mock(spec_set=Config)
-        with patch('%s.run' % pbm) as mock_run:
-            with patch('%s.Config.empty' % pbm) as mock_empty:
+        with patch(f'{pbm}.run') as mock_run:
+            with patch(f'{pbm}.Config.empty') as mock_empty:
                 mock_empty.return_value = mock_conf
                 runner.CustodianStep('rName', self.m_conf).dryrun()
         assert mock_run.mock_calls == [call(mock_conf)]
@@ -253,20 +245,12 @@ class TestMailerStep(StepTester):
         def se_mailer_setup_defaults(d):
             d['defaults'] = 'set'
 
-        with patch(
-            '%s.jsonschema.validate' % pbm, autospec=True
-        ) as mock_validate:
-            with patch(
-                '%s.mailer_setup_defaults' % pbm, autospec=True
-            ) as mock_msd:
+        with patch(f'{pbm}.jsonschema.validate', autospec=True) as mock_validate:
+            with patch(f'{pbm}.mailer_setup_defaults', autospec=True) as mock_msd:
                 mock_msd.side_effect = se_mailer_setup_defaults
-                with patch(
-                    '%s.os.path.isdir' % pbm
-                ) as mock_isdir:
+                with patch(f'{pbm}.os.path.isdir') as mock_isdir:
                     mock_isdir.return_value = True
-                    with patch(
-                        '%s.os.path.abspath' % pbm
-                    ) as mock_abspath:
+                    with patch(f'{pbm}.os.path.abspath') as mock_abspath:
                         mock_abspath.return_value = '/foo/bar'
                         res = runner.MailerStep(
                             'rName', m_conf
@@ -295,20 +279,12 @@ class TestMailerStep(StepTester):
         def se_mailer_setup_defaults(d):
             d['defaults'] = 'set'
 
-        with patch(
-            '%s.jsonschema.validate' % pbm, autospec=True
-        ) as mock_validate:
-            with patch(
-                '%s.mailer_setup_defaults' % pbm, autospec=True
-            ) as mock_msd:
+        with patch(f'{pbm}.jsonschema.validate', autospec=True) as mock_validate:
+            with patch(f'{pbm}.mailer_setup_defaults', autospec=True) as mock_msd:
                 mock_msd.side_effect = se_mailer_setup_defaults
-                with patch(
-                    '%s.os.path.isdir' % pbm
-                ) as mock_isdir:
+                with patch(f'{pbm}.os.path.isdir') as mock_isdir:
                     mock_isdir.return_value = False
-                    with patch(
-                        '%s.os.path.abspath' % pbm
-                    ) as mock_abspath:
+                    with patch(f'{pbm}.os.path.abspath') as mock_abspath:
                         mock_abspath.return_value = '/foo/bar/file.py'
                         res = runner.MailerStep(
                             'rName', m_conf
@@ -329,18 +305,10 @@ class TestMailerStep(StepTester):
     def test_run(self):
         m_partial = Mock(spec_set=partial)
         m_conf = Mock(spec_set=ManheimConfig)
-        with patch(
-            '%s.MailerStep.mailer_config' % pbm, new_callable=PropertyMock
-        ) as mock_config:
-            with patch(
-                '%s.mailer_deploy.provision' % pbm, autospec=True
-            ) as mock_prov:
-                with patch(
-                    '%s.functools.partial' % pbm, autospec=True
-                ) as mock_partial:
-                    with patch(
-                        '%s.session_factory' % pbm, autospec=True
-                    ) as mock_sf:
+        with patch(f'{pbm}.MailerStep.mailer_config', new_callable=PropertyMock) as mock_config:
+            with patch(f'{pbm}.mailer_deploy.provision', autospec=True) as mock_prov:
+                with patch(f'{pbm}.functools.partial', autospec=True) as mock_partial:
+                    with patch(f'{pbm}.session_factory', autospec=True) as mock_sf:
                         mock_config.return_value = m_conf
                         mock_partial.return_value = m_partial
                         runner.MailerStep('rName', self.m_conf).run()
@@ -351,18 +319,10 @@ class TestMailerStep(StepTester):
     def test_dryrun(self):
         m_partial = Mock(spec_set=partial)
         m_conf = Mock(spec_set=ManheimConfig)
-        with patch(
-            '%s.MailerStep.mailer_config' % pbm, new_callable=PropertyMock
-        ) as mock_config:
-            with patch(
-                '%s.mailer_deploy.provision' % pbm, autospec=True
-            ) as mock_prov:
-                with patch(
-                    '%s.functools.partial' % pbm, autospec=True
-                ) as mock_partial:
-                    with patch(
-                        '%s.session_factory' % pbm, autospec=True
-                    ):
+        with patch(f'{pbm}.MailerStep.mailer_config', new_callable=PropertyMock) as mock_config:
+            with patch(f'{pbm}.mailer_deploy.provision', autospec=True) as mock_prov:
+                with patch(f'{pbm}.functools.partial', autospec=True) as mock_partial:
+                    with patch(f'{pbm}.session_factory', autospec=True):
                         mock_config.return_value = m_conf
                         mock_partial.return_value = m_partial
                         runner.MailerStep('rName', self.m_conf).dryrun()
@@ -385,12 +345,12 @@ class TestMailerStep(StepTester):
 class TestDryRunDiffStep(StepTester):
 
     def test_run(self):
-        with patch('%s.DryRunDiffer' % pbm, autospec=True) as mock_drd:
+        with patch(f'{pbm}.DryRunDiffer', autospec=True) as mock_drd:
             runner.DryRunDiffStep('rName', self.m_conf).run()
         assert mock_drd.mock_calls == []
 
     def test_dryrun(self):
-        with patch('%s.DryRunDiffer' % pbm, autospec=True) as mock_drd:
+        with patch(f'{pbm}.DryRunDiffer', autospec=True) as mock_drd:
             runner.DryRunDiffStep('rName', self.m_conf).dryrun()
         assert mock_drd.mock_calls == [
             call(self.m_conf),
@@ -418,7 +378,7 @@ class TestS3ArchiverStep(StepTester):
         type(self.m_conf).output_s3_bucket_name = PropertyMock(
             return_value='cloud-custodian-ACCT-REGION'
         )
-        with patch('%s.S3Archiver' % pbm, autospec=True) as mock_s3a:
+        with patch(f'{pbm}.S3Archiver', autospec=True) as mock_s3a:
             runner.S3ArchiverStep('rName', self.m_conf).run()
         assert mock_s3a.mock_calls == [
             call(
@@ -433,7 +393,7 @@ class TestS3ArchiverStep(StepTester):
         type(self.m_conf).output_s3_bucket_name = PropertyMock(
             return_value='cloud-custodian-ACCT-REGION'
         )
-        with patch('%s.S3Archiver' % pbm, autospec=True) as mock_s3a:
+        with patch(f'{pbm}.S3Archiver', autospec=True) as mock_s3a:
             runner.S3ArchiverStep('rName', self.m_conf).dryrun()
         assert mock_s3a.mock_calls == [
             call(
@@ -453,27 +413,21 @@ class TestS3ArchiverStep(StepTester):
 class TestDocsBuildStep(StepTester):
 
     def test_run(self):
-        with patch(
-            '%s.DocsBuildStep._run_sphinx_build' % pbm, autospec=True
-        ) as m_rsb:
+        with patch(f'{pbm}.DocsBuildStep._run_sphinx_build', autospec=True) as m_rsb:
             cls = runner.DocsBuildStep('rName', self.m_conf)
             cls.run()
         assert m_rsb.mock_calls == [call(cls)]
 
     def test_dryrun(self):
-        with patch(
-            '%s.DocsBuildStep._run_sphinx_build' % pbm, autospec=True
-        ) as m_rsb:
+        with patch(f'{pbm}.DocsBuildStep._run_sphinx_build', autospec=True) as m_rsb:
             cls = runner.DocsBuildStep('rName', self.m_conf)
             cls.dryrun()
         assert m_rsb.mock_calls == [call(cls)]
 
     def test_run_sphinx_build(self):
-        with patch('%s.os.path.exists' % pbm, autospec=True) as mock_ope:
-            with patch('%s.rmtree' % pbm, autospec=True) as mock_rmtree:
-                with patch(
-                    '%s.sphinx_main' % pbm, autospec=True
-                ) as mock_sphinx:
+        with patch(f'{pbm}.os.path.exists', autospec=True) as mock_ope:
+            with patch(f'{pbm}.rmtree', autospec=True) as mock_rmtree:
+                with patch(f'{pbm}.sphinx_main', autospec=True) as mock_sphinx:
                     mock_ope.return_value = False
                     mock_sphinx.return_value = 0
                     runner.DocsBuildStep(
@@ -486,11 +440,9 @@ class TestDocsBuildStep(StepTester):
         ]
 
     def test_run_sphinx_build_failure(self):
-        with patch('%s.os.path.exists' % pbm, autospec=True) as mock_ope:
-            with patch('%s.rmtree' % pbm, autospec=True) as mock_rmtree:
-                with patch(
-                    '%s.sphinx_main' % pbm, autospec=True
-                ) as mock_sphinx:
+        with patch(f'{pbm}.os.path.exists', autospec=True) as mock_ope:
+            with patch(f'{pbm}.rmtree', autospec=True) as mock_rmtree:
+                with patch(f'{pbm}.sphinx_main', autospec=True) as mock_sphinx:
                     mock_ope.return_value = True
                     mock_sphinx.return_value = 3
                     with pytest.raises(RuntimeError) as exc:
@@ -515,7 +467,7 @@ class TestDocsBuildStep(StepTester):
 class TestStepClasses(object):
 
     def test_all_subclasses_have_unique_name(self):
-        subc = [x for x in runner.BaseStep.__subclasses__()]
+        subc = list(runner.BaseStep.__subclasses__())
         names = []
         for x in subc:
             assert x.name is not None
@@ -554,7 +506,7 @@ class TestCustodianRunner(object):
 
     def test_init(self):
         m_conf = Mock(spec_set=ManheimConfig)
-        with patch('%s.ManheimConfig.from_file' % pbm) as mock_cff:
+        with patch(f'{pbm}.ManheimConfig.from_file') as mock_cff:
             mock_cff.return_value = m_conf
             cls = runner.CustodianRunner('acctName', 'cpath')
         assert cls.config == m_conf
@@ -566,21 +518,13 @@ class TestCustodianRunner(object):
         type(m_conf).regions = PropertyMock(
             return_value=['r1', 'r2', 'r3']
         )
-        with patch('%s.CustodianRunner.ordered_step_classes' % pbm, self.steps):
-            with patch.multiple(
-                '%s.CustodianRunner' % pbm,
-                autospec=True,
-                _steps_to_run=DEFAULT,
-                _run_step_in_regions=DEFAULT,
-                _validate_account=DEFAULT
-            ) as mocks:
+        with patch(f'{pbm}.CustodianRunner.ordered_step_classes', self.steps):
+            with patch.multiple(f'{pbm}.CustodianRunner', autospec=True, _steps_to_run=DEFAULT, _run_step_in_regions=DEFAULT, _validate_account=DEFAULT) as mocks:
                 mocks['_steps_to_run'].return_value = [
                     self.cls1, self.cls2, self.cls3, self.cls4
                 ]
-                with patch('%s.logger' % pbm, autospec=True) as mock_logger:
-                    with patch(
-                        '%s.ManheimConfig.from_file' % pbm
-                    ) as mock_cff:
+                with patch(f'{pbm}.logger', autospec=True) as mock_logger:
+                    with patch(f'{pbm}.ManheimConfig.from_file') as mock_cff:
                         mock_cff.return_value = m_conf
                         cls = runner.CustodianRunner('acctName')
                         cls.run('run')
@@ -613,19 +557,13 @@ class TestCustodianRunner(object):
         type(m_conf).regions = PropertyMock(
             return_value=['r1', 'r2', 'r3']
         )
-        with patch('%s.CustodianRunner.ordered_step_classes' % pbm, self.steps):
-            with patch.multiple(
-                '%s.CustodianRunner' % pbm,
-                autospec=True,
-                _steps_to_run=DEFAULT,
-                _run_step_in_regions=DEFAULT,
-                _validate_account=DEFAULT
-            ) as mocks:
+        with patch(f'{pbm}.CustodianRunner.ordered_step_classes', self.steps):
+            with patch.multiple(f'{pbm}.CustodianRunner', autospec=True, _steps_to_run=DEFAULT, _run_step_in_regions=DEFAULT, _validate_account=DEFAULT) as mocks:
                 mocks['_steps_to_run'].return_value = [
                     self.cls2, self.cls3
                 ]
-                with patch('%s.logger' % pbm, autospec=True) as mock_logger:
-                    with patch('%s.ManheimConfig.from_file' % pbm) as mock_cff:
+                with patch(f'{pbm}.logger', autospec=True) as mock_logger:
+                    with patch(f'{pbm}.ManheimConfig.from_file') as mock_cff:
                         mock_cff.return_value = m_conf
                         cls = runner.CustodianRunner('aName')
                         cls.run(
@@ -659,19 +597,13 @@ class TestCustodianRunner(object):
         type(m_conf).regions = PropertyMock(
             return_value=['r1', 'r2', 'r3']
         )
-        with patch('%s.CustodianRunner.ordered_step_classes' % pbm, self.steps):
-            with patch.multiple(
-                '%s.CustodianRunner' % pbm,
-                autospec=True,
-                _steps_to_run=DEFAULT,
-                _run_step_in_regions=DEFAULT,
-                _validate_account=DEFAULT
-            ) as mocks:
+        with patch(f'{pbm}.CustodianRunner.ordered_step_classes', self.steps):
+            with patch.multiple(f'{pbm}.CustodianRunner', autospec=True, _steps_to_run=DEFAULT, _run_step_in_regions=DEFAULT, _validate_account=DEFAULT) as mocks:
                 mocks['_steps_to_run'].return_value = [
                     self.cls2, self.cls3
                 ]
-                with patch('%s.logger' % pbm, autospec=True) as mock_logger:
-                    with patch('%s.ManheimConfig.from_file' % pbm) as mock_cff:
+                with patch(f'{pbm}.logger', autospec=True) as mock_logger:
+                    with patch(f'{pbm}.ManheimConfig.from_file') as mock_cff:
                         mock_cff.return_value = m_conf
                         with pytest.raises(RuntimeError) as exc:
                             cls = runner.CustodianRunner('acctName')
@@ -682,8 +614,8 @@ class TestCustodianRunner(object):
                                 skip_steps=['cls4']
                             )
         assert str(exc.value) == 'ERROR: All specified region names must be ' \
-                                 'listed in the "regions" section of the ' \
-                                 'config file (manheim-c7n-tools.yml)'
+                                     'listed in the "regions" section of the ' \
+                                     'config file (manheim-c7n-tools.yml)'
         assert mocks['_steps_to_run'].mock_calls == [
             call(cls, ['cls2', 'cls3', 'cls4'], ['cls4'])
         ]
@@ -704,13 +636,13 @@ class TestCustodianRunner(object):
         )
         type(m_conf).account_id = PropertyMock(return_value=1234567890)
 
-        with patch('%s.boto3.client' % pbm) as mock_client:
+        with patch(f'{pbm}.boto3.client') as mock_client:
             mock_client.return_value.get_caller_identity.return_value = {
                 'UserId': 'MyUID',
                 'Arn': 'myARN',
                 'Account': '1234567890'
             }
-            with patch('%s.ManheimConfig.from_file' % pbm) as mock_cff:
+            with patch(f'{pbm}.ManheimConfig.from_file') as mock_cff:
                 mock_cff.return_value = m_conf
                 cls = runner.CustodianRunner('acctName')
                 cls._validate_account()
@@ -729,21 +661,21 @@ class TestCustodianRunner(object):
         )
         type(m_conf).account_id = PropertyMock(return_value=1234567890)
 
-        with patch('%s.boto3.client' % pbm) as mock_client:
+        with patch(f'{pbm}.boto3.client') as mock_client:
             mock_client.return_value.get_caller_identity.return_value = {
                 'UserId': 'MyUID',
                 'Arn': 'myARN',
                 'Account': '9876543210'
             }
-            with patch('%s.ManheimConfig.from_file' % pbm) as mock_cff:
+            with patch(f'{pbm}.ManheimConfig.from_file') as mock_cff:
                 mock_cff.return_value = m_conf
                 cls = runner.CustodianRunner('acctName')
                 with pytest.raises(RuntimeError) as exc:
                     cls._validate_account()
         assert str(exc.value) == 'ERROR: Using configuration for account ' \
-                                 '1234567890 (myAcct), but ' \
-                                 'sts:GetCallerIdentity reports connected to ' \
-                                 'account 9876543210'
+                                     '1234567890 (myAcct), but ' \
+                                     'sts:GetCallerIdentity reports connected to ' \
+                                     'account 9876543210'
         assert mock_cff.mock_calls == [
             call('manheim-c7n-tools.yml', 'acctName')
         ]
@@ -754,16 +686,16 @@ class TestCustodianRunner(object):
 
     def test_steps_to_run_all(self):
         m_conf = Mock(spec_set=ManheimConfig)
-        with patch('%s.CustodianRunner.ordered_step_classes' % pbm, self.steps):
-            with patch('%s.ManheimConfig.from_file' % pbm) as mock_cff:
+        with patch(f'{pbm}.CustodianRunner.ordered_step_classes', self.steps):
+            with patch(f'{pbm}.ManheimConfig.from_file') as mock_cff:
                 mock_cff.return_value = m_conf
                 res = runner.CustodianRunner('acctName')._steps_to_run([], [])
         assert res == self.steps
 
     def test_steps_to_run_step_names(self):
         m_conf = Mock(spec_set=ManheimConfig)
-        with patch('%s.CustodianRunner.ordered_step_classes' % pbm, self.steps):
-            with patch('%s.ManheimConfig.from_file' % pbm) as mock_cff:
+        with patch(f'{pbm}.CustodianRunner.ordered_step_classes', self.steps):
+            with patch(f'{pbm}.ManheimConfig.from_file') as mock_cff:
                 mock_cff.return_value = m_conf
                 res = runner.CustodianRunner('acctName')._steps_to_run(
                     ['cls3', 'cls1'], []
@@ -772,8 +704,8 @@ class TestCustodianRunner(object):
 
     def test_steps_to_run_skip_steps(self):
         m_conf = Mock(spec_set=ManheimConfig)
-        with patch('%s.CustodianRunner.ordered_step_classes' % pbm, self.steps):
-            with patch('%s.ManheimConfig.from_file' % pbm) as mock_cff:
+        with patch(f'{pbm}.CustodianRunner.ordered_step_classes', self.steps):
+            with patch(f'{pbm}.ManheimConfig.from_file') as mock_cff:
                 mock_cff.return_value = m_conf
                 res = runner.CustodianRunner('aName')._steps_to_run(
                     [], ['cls4', 'cls2']
@@ -782,8 +714,8 @@ class TestCustodianRunner(object):
 
     def test_steps_to_run_names_and_skip(self):
         m_conf = Mock(spec_set=ManheimConfig)
-        with patch('%s.CustodianRunner.ordered_step_classes' % pbm, self.steps):
-            with patch('%s.ManheimConfig.from_file' % pbm) as mock_cff:
+        with patch(f'{pbm}.CustodianRunner.ordered_step_classes', self.steps):
+            with patch(f'{pbm}.ManheimConfig.from_file') as mock_cff:
                 mock_cff.return_value = m_conf
                 res = runner.CustodianRunner('aName')._steps_to_run(
                     ['cls3', 'cls2', 'cls1'], ['cls1']
@@ -794,7 +726,7 @@ class TestCustodianRunner(object):
         """ensures all are subclasses of BaseStep"""
         m_conf = Mock(spec_set=ManheimConfig)
         for klass in runner.CustodianRunner.ordered_step_classes:
-            with patch('%s.ManheimConfig.from_file' % pbm) as mock_cff:
+            with patch(f'{pbm}.ManheimConfig.from_file') as mock_cff:
                 mock_cff.return_value = m_conf
                 assert isinstance(klass(None, m_conf), runner.BaseStep)
 
@@ -814,8 +746,8 @@ class TestCustodianRunner(object):
 
         m_conf.config_for_region.side_effect = se_conf_for_region
 
-        with patch('%s.logger' % pbm, autospec=True) as mock_logger:
-            with patch('%s.ManheimConfig.from_file' % pbm) as mock_cff:
+        with patch(f'{pbm}.logger', autospec=True) as mock_logger:
+            with patch(f'{pbm}.ManheimConfig.from_file') as mock_cff:
                 mock_cff.return_value = m_conf
                 runner.CustodianRunner('acctName')._run_step_in_regions(
                     'run', self.cls1, ['r1', 'r2', 'r3']
@@ -858,10 +790,10 @@ class TestCustodianRunner(object):
 
         m_conf.config_for_region.side_effect = se_conf_for_region
 
-        with patch('%s.logger' % pbm, autospec=True) as mock_logger:
-            with patch('%s.ManheimConfig.from_file' % pbm) as mock_cff:
+        with patch(f'{pbm}.logger', autospec=True) as mock_logger:
+            with patch(f'{pbm}.ManheimConfig.from_file') as mock_cff:
                 mock_cff.return_value = m_conf
-                with patch('%s.PolicygenStep' % pbm, autospec=True) as mock_pgs:
+                with patch(f'{pbm}.PolicygenStep', autospec=True) as mock_pgs:
                     type(mock_pgs).name = PropertyMock(return_value='policygen')
                     mock_pgs.run_in_region.return_value = True
                     runner.CustodianRunner('acctName')._run_step_in_regions(
@@ -901,8 +833,8 @@ class TestCustodianRunner(object):
 
         m_conf.config_for_region.side_effect = se_conf_for_region
 
-        with patch('%s.logger' % pbm, autospec=True) as mock_logger:
-            with patch('%s.ManheimConfig.from_file' % pbm) as mock_cff:
+        with patch(f'{pbm}.logger', autospec=True) as mock_logger:
+            with patch(f'{pbm}.ManheimConfig.from_file') as mock_cff:
                 mock_cff.return_value = m_conf
                 runner.CustodianRunner('acctName')._run_step_in_regions(
                     'dryrun', self.cls2, ['r2', 'r3']
@@ -1091,20 +1023,20 @@ class TestMain(object):
         m_cr = Mock(spec_set=runner.CustodianRunner)
         type(m_cr).config = m_conf
         with patch.multiple(
-            pbm,
-            autospec=True,
-            parse_args=DEFAULT,
-            set_log_debug=DEFAULT,
-            set_log_info=DEFAULT,
-            CustodianRunner=DEFAULT,
-            ManheimConfig=DEFAULT,
-            assume_role=DEFAULT
-        ) as mocks:
+                pbm,
+                autospec=True,
+                parse_args=DEFAULT,
+                set_log_debug=DEFAULT,
+                set_log_info=DEFAULT,
+                CustodianRunner=DEFAULT,
+                ManheimConfig=DEFAULT,
+                assume_role=DEFAULT
+            ) as mocks:
             mocks['parse_args'].return_value = FakeArgs(ACTION='accounts')
             mocks['CustodianRunner'].return_value = m_cr
             type(mocks['CustodianRunner']).ordered_step_classes = osc
             type(mocks['ManheimConfig']).return_value = m_conf
-            with patch('%s.ManheimConfig.list_accounts' % pbm) as mock_la:
+            with patch(f'{pbm}.ManheimConfig.list_accounts') as mock_la:
                 mock_la.return_value = {
                     'acct1': 1111,
                     'acct3': 3333,

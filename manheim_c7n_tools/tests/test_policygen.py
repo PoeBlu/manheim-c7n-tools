@@ -1050,10 +1050,7 @@ class TestReadPolicyDirectory(PolicyGenTester):
     def test_simple(self):
 
         def se_read_policies(_, rname):
-            d = {
-                'foo': 'bar-%s' % rname,
-                'baz': 'blam'
-            }
+            d = {'foo': f'bar-{rname}', 'baz': 'blam'}
             if rname == 'foo/common':
                 d['foo/common'] = 'c'
             return d
@@ -1095,7 +1092,7 @@ class TestGenerateConfigs(PolicyGenTester):
     def test_simple(self):
 
         def se_apply_defaults(klass, defaults, policy):
-            return '%s+defaults' % policy
+            return f'{policy}+defaults'
 
         policies = {
             'foo': 'bar',
@@ -1160,7 +1157,7 @@ class TestGenerateConfigs(PolicyGenTester):
         )
 
         def se_apply_defaults(klass, defaults, policy):
-            return '%s+defaults' % policy
+            return f'{policy}+defaults'
 
         policies = {
             'foo': 'bar',
@@ -2030,16 +2027,14 @@ class TestRegionsRst(PolicyGenTester):
         )
 
         def se_conf(_, aname):
-            if aname == 'myAccount':
-                return m_confA
-            return m_confB
+            return m_confA if aname == 'myAccount' else m_confB
 
         self.m_conf.from_file.side_effect = se_conf
         res = self.cls._regions_rst()
         assert res == "  * myAccount (1234567890)\n\n" \
-                      "    * region1\n    * region2\n    * region3\n\n" \
-                      "  * otherAccount (987654321)\n\n" \
-                      "    * region2\n    * region3\n\n"
+                          "    * region1\n    * region2\n    * region3\n\n" \
+                          "  * otherAccount (987654321)\n\n" \
+                          "    * region2\n    * region3\n\n"
 
 
 class TestPolicyComment(PolicyGenTester):
@@ -2126,9 +2121,7 @@ class TestReadPolicies(PolicyGenTester):
     def test_no_such_directory(self):
 
         def se_listdir(dirname):
-            raise OSError(
-                "[Errno 2] No such file or directory: '%s'" % dirname
-            )
+            raise OSError(f"[Errno 2] No such file or directory: '{dirname}'")
 
         with patch(
             'manheim_c7n_tools.policygen.os.listdir', autospec=True

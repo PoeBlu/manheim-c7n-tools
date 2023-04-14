@@ -71,9 +71,7 @@ class S3Archiver(object):
             logger.info('Moving policy prefix logs/%s to archived-logs/%s',
                         policy_name, policy_name)
         count = 0
-        for o in self._bucket.objects.filter(
-            Prefix='logs/%s/' % policy_name
-        ):
+        for o in self._bucket.objects.filter(Prefix=f'logs/{policy_name}/'):
             dest = o.key.replace('logs/', 'archived-logs/')
             self._s3_move_file(o, dest)
             count += 1
@@ -135,10 +133,10 @@ class S3Archiver(object):
         )
         if response['IsTruncated']:
             raise RuntimeError('ERROR: S3 response was truncated!')
-        result = []
-        for pname in response.get('CommonPrefixes', []):
-            result.append(pname['Prefix'].replace('logs/', '').strip('/'))
-        return result
+        return [
+            pname['Prefix'].replace('logs/', '').strip('/')
+            for pname in response.get('CommonPrefixes', [])
+        ]
 
     def _get_policy_names(self):
         """
@@ -169,8 +167,7 @@ def parse_args(argv):
                    help='S3 Bucket Name')
     p.add_argument('CONF_FILE', action='store', type=str,
                    help='path to cloud-custodian config YML file')
-    args = p.parse_args(argv)
-    return args
+    return p.parse_args(argv)
 
 
 def main():

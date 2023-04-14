@@ -165,8 +165,8 @@ class PolicyGen(object):
         :type region_name: str
         """
         config_str = yaml.dump(result)
-        fname = 'custodian_%s.yml' % region_name
-        logger.info('Writing %s policies to %s...' % (region_name, fname))
+        fname = f'custodian_{region_name}.yml'
+        logger.info(f'Writing {region_name} policies to {fname}...')
         conf = config_str
         replacements = [
             ['%%BUCKET_NAME%%', self._config.output_s3_bucket_name],
@@ -180,7 +180,7 @@ class PolicyGen(object):
         ]
         for k, v in os.environ.items():
             if k.startswith('POLICYGEN_ENV_'):
-                replacements.append(['%%' + k + '%%', v])
+                replacements.append([f'%%{k}%%', v])
         for macro, val in replacements:
             conf = conf.replace(macro, val)
         self._write_file(fname, conf)
@@ -199,16 +199,17 @@ class PolicyGen(object):
         :type policies: list
         :raises: SystemExit(1) if any policies failed checks
         """
-        policy_checks = []
-        for x in dir(self):
-            if x.startswith('_check_policy_') and callable(getattr(self, x)):
-                policy_checks.append(getattr(self, x))
+        policy_checks = [
+            getattr(self, x)
+            for x in dir(self)
+            if x.startswith('_check_policy_') and callable(getattr(self, x))
+        ]
         failures = defaultdict(list)
         for pol in policies:
             for chk in policy_checks:
                 if not chk(pol):
                     failures[pol['name']].append(strip_doc(chk))
-        if len(failures) > 0:
+        if failures:
             logger.error('ERROR: Some policies failed sanity/safety checks:')
             for pol_name in sorted(failures.keys()):
                 logger.error(pol_name)
@@ -252,7 +253,7 @@ class PolicyGen(object):
                 continue
             mark_tags.append(a['tag'])
         for t in mark_tags:
-            tag_filter = {'tag:%s' % t: 'absent'}
+            tag_filter = {f'tag:{t}': 'absent'}
             if tag_filter not in policy['filters']:
                 return False
         return True
@@ -365,12 +366,14 @@ class PolicyGen(object):
         # add the filters
         for p in policies:
             name = p['name']
-            cwecleanup['filters'].append({
-                'type': 'value',
-                'key': 'Name',
-                'op': 'ne',
-                'value': 'custodian-%s' % name
-            })
+            cwecleanup['filters'].append(
+                {
+                    'type': 'value',
+                    'key': 'Name',
+                    'op': 'ne',
+                    'value': f'custodian-{name}',
+                }
+            )
             lcleanup['filters'].append({
                 'type': 'value',
                 'key': 'tag:Component',
@@ -472,9 +475,7 @@ class PolicyGen(object):
                 'ERROR: policy has an array but defaults does not; cannot merge'
             )
             raise RuntimeError(
-                'Policy %s: Cannot array merge non-array from defaults (%s)' % (
-                    policy_name, base
-                )
+                f'Policy {policy_name}: Cannot array merge non-array from defaults ({base})'
             )
         # find the defaults, by type
         def_dicts = {}
@@ -525,13 +526,9 @@ class PolicyGen(object):
         :return: built rST markup for policies docs
         :rtype: str
         """
-        buildinfo = 'by `%s %s <%s>`_' % (
-            os.environ.get('JOB_NAME', ''),
-            os.environ.get('BUILD_NUMBER', ''),
-            os.environ.get('BUILD_URL', '')
-        )
+        buildinfo = f"by `{os.environ.get('JOB_NAME', '')} {os.environ.get('BUILD_NUMBER', '')} <{os.environ.get('BUILD_URL', '')}>`_"
         commit = os.environ.get('GIT_COMMIT', 'unknown')
-        gitlink = '%scommit/%s' % (git_html_url(), commit)
+        gitlink = f'{git_html_url()}commit/{commit}'
         if buildinfo == 'by `  <>`_':
             buildinfo = 'locally'
         s = "this page built %s from `%s <%s>`_ at %s\n\n" % (
@@ -577,9 +574,7 @@ class PolicyGen(object):
                 if regions == all_regions:
                     accts.append(acctname)
                 elif len(regions) > 0:
-                    accts.append('%s (%s)' % (
-                        acctname, ' '.join(regions)
-                    ))
+                    accts.append(f"{acctname} ({' '.join(regions)})")
             if accts == acct_names:
                 result.append([
                     pname,
@@ -599,14 +594,18 @@ class PolicyGen(object):
         for acctname in self._config.list_accounts(self._config.config_path):
             aconf = self._config.from_file(self._config.config_path, acctname)
             res += '  * %s (%s)\n\n' % (acctname, aconf.account_id)
-            res += "\n".join(['    * %s' % r for r in aconf.regions]) + "\n\n"
+            res += "\n".join([f'    * {r}' for r in aconf.regions]) + "\n\n"
         return res
 
     def _policy_comment(self, policy):
-        for k in ['comment', 'comments', 'description']:
-            if k in policy:
-                return policy[k].strip()
-        return 'unknown'
+        return next(
+            (
+                policy[k].strip()
+                for k in ['comment', 'comments', 'description']
+                if k in policy
+            ),
+            'unknown',
+        )
 
     def _read_policies(self, subdir):
         """

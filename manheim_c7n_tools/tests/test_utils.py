@@ -32,7 +32,7 @@ class TestUtils(object):
 
     def test_set_log_info(self):
         mock_log = Mock(spec_set=logging.Logger)
-        with patch('%s.set_log_level_format' % pbm, autospec=True) as mock_set:
+        with patch(f'{pbm}.set_log_level_format', autospec=True) as mock_set:
             set_log_info(mock_log)
         assert mock_set.mock_calls == [
             call(
@@ -43,7 +43,7 @@ class TestUtils(object):
 
     def test_set_log_debug(self):
         mock_log = Mock(spec_set=logging.Logger)
-        with patch('%s.set_log_level_format' % pbm, autospec=True) as mock_set:
+        with patch(f'{pbm}.set_log_level_format', autospec=True) as mock_set:
             set_log_debug(mock_log)
         assert mock_set.mock_calls == [
             call(mock_log, logging.DEBUG,
@@ -55,9 +55,7 @@ class TestUtils(object):
         mock_log = Mock(spec_set=logging.Logger)
         mock_handler = Mock(spec_set=logging.Handler)
         type(mock_log).handlers = [mock_handler]
-        with patch(
-            '%s.logging.Formatter' % pbm, autospec=True
-        ) as mock_formatter:
+        with patch(f'{pbm}.logging.Formatter', autospec=True) as mock_formatter:
             set_log_level_format(mock_log, 5, 'foo')
         assert mock_formatter.mock_calls == [
             call(fmt='foo')
@@ -82,9 +80,7 @@ class TestUtils(object):
 class TestGitHtmlUrl(object):
 
     def test_private_git(self):
-        with patch(
-            '%s.subprocess.check_output' % pbm, autospec=True
-        ) as mock_co:
+        with patch(f'{pbm}.subprocess.check_output', autospec=True) as mock_co:
             mock_co.return_value = 'git@git.example.com:Foo/bar.git'
             res = git_html_url()
         assert res == 'https://git.example.com/Foo/bar/'
@@ -93,9 +89,7 @@ class TestGitHtmlUrl(object):
         ]
 
     def test_private_https(self):
-        with patch(
-            '%s.subprocess.check_output' % pbm, autospec=True
-        ) as mock_co:
+        with patch(f'{pbm}.subprocess.check_output', autospec=True) as mock_co:
             mock_co.return_value = 'https://git.example.com/Foo/bar.git'
             res = git_html_url()
         assert res == 'https://git.example.com/Foo/bar/'
@@ -104,9 +98,7 @@ class TestGitHtmlUrl(object):
         ]
 
     def test_github_git(self):
-        with patch(
-            '%s.subprocess.check_output' % pbm, autospec=True
-        ) as mock_co:
+        with patch(f'{pbm}.subprocess.check_output', autospec=True) as mock_co:
             mock_co.return_value = 'git@github.com:Foo/bar.git'
             res = git_html_url()
         assert res == 'https://github.com/Foo/bar/'
@@ -115,9 +107,7 @@ class TestGitHtmlUrl(object):
         ]
 
     def test_github_https(self):
-        with patch(
-            '%s.subprocess.check_output' % pbm, autospec=True
-        ) as mock_co:
+        with patch(f'{pbm}.subprocess.check_output', autospec=True) as mock_co:
             mock_co.return_value = 'https://github.com/Foo/bar.git'
             res = git_html_url()
         assert res == 'https://github.com/Foo/bar/'
@@ -126,9 +116,7 @@ class TestGitHtmlUrl(object):
         ]
 
     def test_bad_pattern(self):
-        with patch(
-            '%s.subprocess.check_output' % pbm, autospec=True
-        ) as mock_co:
+        with patch(f'{pbm}.subprocess.check_output', autospec=True) as mock_co:
             with pytest.raises(RuntimeError):
                 mock_co.return_value = 'foobar'
                 git_html_url()
@@ -160,9 +148,9 @@ class TestAssumeRole(object):
         type(self.m_conf).assume_role = PropertyMock(return_value={
             'role_arn': 'assumeRoleArn'
         })
-        with patch('%s.logger' % pbm, autospec=True) as mock_logger:
+        with patch(f'{pbm}.logger', autospec=True) as mock_logger:
             with patch.dict(os.environ, {}, clear=True):
-                with patch('%s.boto3.session.Session' % pbm) as mock_boto:
+                with patch(f'{pbm}.boto3.session.Session') as mock_boto:
                     mock_boto.return_value = m_sess
                     assume_role(self.m_conf)
                     assert os.environ == {
@@ -213,9 +201,9 @@ class TestAssumeRole(object):
             'external_id': 'eID',
             'duration_seconds': '1234'
         })
-        with patch('%s.logger' % pbm, autospec=True) as mock_logger:
+        with patch(f'{pbm}.logger', autospec=True) as mock_logger:
             with patch.dict(os.environ, {}, clear=True):
-                with patch('%s.boto3.session.Session' % pbm) as mock_boto:
+                with patch(f'{pbm}.boto3.session.Session') as mock_boto:
                     mock_boto.return_value = m_sess
                     assume_role(self.m_conf)
                     assert os.environ == {
@@ -263,12 +251,12 @@ class TestAssumeRole(object):
         }
         m_sess = Mock()
         m_sess.client.return_value = m_sts
-        with patch('%s.logger' % pbm, autospec=True) as mock_logger:
+        with patch(f'{pbm}.logger', autospec=True) as mock_logger:
             with patch.dict(os.environ, {}, clear=True):
-                with patch('%s.boto3.session.Session' % pbm) as mock_boto:
+                with patch(f'{pbm}.boto3.session.Session') as mock_boto:
                     mock_boto.return_value = m_sess
                     assume_role(self.m_conf)
-                    assert os.environ == {}
+                    assert not os.environ
         assert mock_boto.mock_calls == []
         assert mock_logger.mock_calls == [
             call.debug('No assume_role configuration; not assuming a role.')

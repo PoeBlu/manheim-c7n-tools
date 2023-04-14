@@ -128,10 +128,8 @@ def git_html_url():
             p
         )
     if not m:
-        raise RuntimeError(
-            'Error: no pattern match for URL: %s' % p
-        )
-    return 'https://%s/%s/' % (m.group('hostname'), m.group('path'))
+        raise RuntimeError(f'Error: no pattern match for URL: {p}')
+    return f"https://{m['hostname']}/{m['path']}/"
 
 
 def assume_role(config):
@@ -152,7 +150,7 @@ def assume_role(config):
         return
     kwargs = {
         'RoleArn': conf['role_arn'],
-        'RoleSessionName': 'manheim-c7n-tools_%s' % config.account_name
+        'RoleSessionName': f'manheim-c7n-tools_{config.account_name}',
     }
     if 'external_id' in conf:
         kwargs['ExternalId'] = conf['external_id']

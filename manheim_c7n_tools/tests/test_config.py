@@ -24,10 +24,8 @@ pbm = 'manheim_c7n_tools.config'
 class TestManheimConfig(object):
 
     def test_init(self):
-        with patch('%s.logger' % pbm, autospec=True) as mock_logger:
-            with patch(
-                '%s.jsonschema.validate' % pbm, autospec=True
-            ) as mock_validate:
+        with patch(f'{pbm}.logger', autospec=True) as mock_logger:
+            with patch(f'{pbm}.jsonschema.validate', autospec=True) as mock_validate:
                 cls = ManheimConfig(
                     foo='bar', baz=2, regions=['us-east-1'],
                     config_path='manheim-c7n-tools.yml'
@@ -45,17 +43,15 @@ class TestManheimConfig(object):
         ]
 
     def test_init_not_us_east_1(self):
-        with patch('%s.logger' % pbm, autospec=True) as mock_logger:
-            with patch(
-                '%s.jsonschema.validate' % pbm, autospec=True
-            ) as mock_validate:
+        with patch(f'{pbm}.logger', autospec=True) as mock_logger:
+            with patch(f'{pbm}.jsonschema.validate', autospec=True) as mock_validate:
                 with pytest.raises(RuntimeError) as exc:
                     ManheimConfig(
                         foo='bar', baz=2, regions=['us-east-2'],
                         config_path='manheim-c7n-tools.yml'
                     )
         assert str(exc.value) == 'ERROR: the first configured region must be ' \
-                                 'us-east-1'
+                                     'us-east-1'
         assert mock_logger.mock_calls == [
             call.debug('Validating configuration...')
         ]
@@ -67,8 +63,8 @@ class TestManheimConfig(object):
         ]
 
     def test_getattr(self):
-        with patch('%s.logger' % pbm, autospec=True):
-            with patch('%s.jsonschema.validate' % pbm, autospec=True):
+        with patch(f'{pbm}.logger', autospec=True):
+            with patch(f'{pbm}.jsonschema.validate', autospec=True):
                 cls = ManheimConfig(
                     foo='bar', baz=2, regions=['us-east-1'], config_path='foo'
                 )
@@ -80,14 +76,10 @@ class TestManheimConfig(object):
 
     def test_from_file(self):
         m_conf = Mock()
-        with patch('%s.logger' % pbm, autospec=True) as mock_logger:
-            with patch(
-                '%s.open' % pbm, mock_open(read_data='foo'), create=True
-            ) as m_open:
-                with patch('%s.yaml.load' % pbm, autospec=True) as mock_load:
-                    with patch(
-                        '%s.ManheimConfig' % pbm, autospec=True
-                    ) as mock_conf:
+        with patch(f'{pbm}.logger', autospec=True) as mock_logger:
+            with patch(f'{pbm}.open', mock_open(read_data='foo'), create=True) as m_open:
+                with patch(f'{pbm}.yaml.load', autospec=True) as mock_load:
+                    with patch(f'{pbm}.ManheimConfig', autospec=True) as mock_conf:
                         mock_conf.return_value = m_conf
                         mock_load.return_value = [
                             {
@@ -126,14 +118,10 @@ class TestManheimConfig(object):
 
     def test_from_file_name_missing(self):
         m_conf = Mock()
-        with patch('%s.logger' % pbm, autospec=True) as mock_logger:
-            with patch(
-                '%s.open' % pbm, mock_open(read_data='foo'), create=True
-            ) as m_open:
-                with patch('%s.yaml.load' % pbm, autospec=True) as mock_load:
-                    with patch(
-                        '%s.ManheimConfig' % pbm, autospec=True
-                    ) as mock_conf:
+        with patch(f'{pbm}.logger', autospec=True) as mock_logger:
+            with patch(f'{pbm}.open', mock_open(read_data='foo'), create=True) as m_open:
+                with patch(f'{pbm}.yaml.load', autospec=True) as mock_load:
+                    with patch(f'{pbm}.ManheimConfig', autospec=True) as mock_conf:
                         mock_conf.return_value = m_conf
                         mock_load.return_value = [
                             {
@@ -152,7 +140,7 @@ class TestManheimConfig(object):
                         with pytest.raises(RuntimeError) as exc:
                             ManheimConfig.from_file('/tmp/conf.yml', 'BAD')
         assert str(exc.value) == 'ERROR: No account with name "BAD"' \
-                                 ' in /tmp/conf.yml'
+                                     ' in /tmp/conf.yml'
         assert mock_logger.mock_calls == [
             call.info('Loading config from: %s', '/tmp/conf.yml')
         ]
@@ -168,14 +156,10 @@ class TestManheimConfig(object):
         assert mock_conf.mock_calls == []
 
     def test_list_accounts(self):
-        with patch('%s.logger' % pbm, autospec=True) as mock_logger:
-            with patch(
-                '%s.open' % pbm, mock_open(read_data='foo'), create=True
-            ) as m_open:
-                with patch('%s.yaml.load' % pbm, autospec=True) as mock_load:
-                    with patch(
-                        '%s.ManheimConfig' % pbm, autospec=True
-                    ) as mock_conf:
+        with patch(f'{pbm}.logger', autospec=True) as mock_logger:
+            with patch(f'{pbm}.open', mock_open(read_data='foo'), create=True) as m_open:
+                with patch(f'{pbm}.yaml.load', autospec=True) as mock_load:
+                    with patch(f'{pbm}.ManheimConfig', autospec=True) as mock_conf:
                         mock_load.return_value = [
                             {
                                 'account_name': 'a1',
@@ -244,7 +228,7 @@ class TestManheimConfig(object):
             },
             'regions': ['us-east-1', 'us-east-2']
         }
-        with patch('%s.jsonschema.validate' % pbm, autospec=True):
+        with patch(f'{pbm}.jsonschema.validate', autospec=True):
             with patch.dict(
                 'os.environ',
                 {'foo': 'bar', 'POLICYGEN_ENV_foo': 'barVAR'},

@@ -151,8 +151,7 @@ class ValidateStep(BaseStep):
 
     def _do_validate(self):
         conf = Config.empty(
-            configs=['custodian_%s.yml' % self.region_name],
-            region=self.region_name
+            configs=[f'custodian_{self.region_name}.yml'], region=self.region_name
         )
         validate(conf)
 
@@ -175,7 +174,7 @@ class MugcStep(BaseStep):
         logging.getLogger('botocore').setLevel(logging.ERROR)
         logging.getLogger('c7n.cache').setLevel(logging.WARNING)
         conf = Config.empty(
-            config_files=['custodian_%s.yml' % self.region_name],
+            config_files=[f'custodian_{self.region_name}.yml'],
             region=self.region_name,
             prefix='custodian-',
             assume=None,
@@ -183,7 +182,7 @@ class MugcStep(BaseStep):
             log_group=None,
             external_id=None,
             cache_period=0,
-            cache=None
+            cache=None,
         )
         resources.load_resources()
         policies = load_policies(conf)
@@ -193,7 +192,7 @@ class MugcStep(BaseStep):
         logging.getLogger('botocore').setLevel(logging.ERROR)
         logging.getLogger('c7n.cache').setLevel(logging.WARNING)
         conf = Config.empty(
-            config_files=['custodian_%s.yml' % self.region_name],
+            config_files=[f'custodian_{self.region_name}.yml'],
             region=self.region_name,
             prefix='custodian-',
             assume=None,
@@ -202,7 +201,7 @@ class MugcStep(BaseStep):
             external_id=None,
             cache_period=0,
             cache=None,
-            dryrun=True
+            dryrun=True,
         )
         resources.load_resources()
         policies = load_policies(conf)
@@ -226,7 +225,7 @@ class CustodianStep(BaseStep):
           --cache '/tmp/.cache/cloud-custodian.cache'
         """
         conf = Config.empty(
-            configs=['custodian_%s.yml' % self.region_name],
+            configs=[f'custodian_{self.region_name}.yml'],
             region=self.region_name,
             regions=[self.region_name],
             log_group=self.config.custodian_log_group,
@@ -235,9 +234,9 @@ class CustodianStep(BaseStep):
             subparser='run',
             cache='/tmp/.cache/cloud-custodian.cache',
             command='c7n.commands.run',
-            output_dir='%s/logs' % self.config.output_s3_bucket_name,
+            output_dir=f'{self.config.output_s3_bucket_name}/logs',
             vars=None,
-            dryrun=False
+            dryrun=False,
         )
         run(conf)
 
@@ -252,7 +251,7 @@ class CustodianStep(BaseStep):
           --cache '/tmp/.cache/cloud-custodian.cache'
         """
         conf = Config.empty(
-            configs=['custodian_%s.yml' % self.region_name],
+            configs=[f'custodian_{self.region_name}.yml'],
             region=self.region_name,
             regions=[self.region_name],
             verbose=1,
@@ -260,9 +259,9 @@ class CustodianStep(BaseStep):
             subparser='run',
             cache='/tmp/.cache/cloud-custodian.cache',
             command='c7n.commands.run',
-            output_dir='dryrun/%s' % self.region_name,
+            output_dir=f'dryrun/{self.region_name}',
             vars=None,
-            dryrun=True
+            dryrun=True,
         )
         run(conf)
 
@@ -343,15 +342,15 @@ class S3ArchiverStep(BaseStep):
         S3Archiver(
             self.region_name,
             self.config.output_s3_bucket_name,
-            'custodian_%s.yml' % self.region_name
+            f'custodian_{self.region_name}.yml',
         ).run()
 
     def dryrun(self):
         S3Archiver(
             self.region_name,
             self.config.output_s3_bucket_name,
-            'custodian_%s.yml' % self.region_name,
-            dryrun=True
+            f'custodian_{self.region_name}.yml',
+            dryrun=True,
         ).run()
 
 
@@ -366,7 +365,7 @@ class DocsBuildStep(BaseStep):
             rmtree('docs/_build')
         # "sphinx-build -W docs/source docs/_build -b dirhtml"
         argv = ['-W', 'docs/source', 'docs/_build', '-b', 'dirhtml']
-        logger.info('Running: sphinx-build %s' % ' '.join(argv))
+        logger.info(f"Running: sphinx-build {' '.join(argv)}")
         rcode = sphinx_main(argv)
         if rcode != 0:
             raise RuntimeError('Sphinx exited %d' % rcode)
@@ -424,10 +423,10 @@ class CustodianRunner(object):
         :return: list of step classes to run, in order
         :rtype: list
         """
-        if not step_names and not skip_steps:
-            # both lists are empty, run everything
-            return self.ordered_step_classes
         if not step_names:
+            if not skip_steps:
+                # both lists are empty, run everything
+                return self.ordered_step_classes
             # we only had skip_steps, so start with the list of all steps
             step_names = [x.name for x in self.ordered_step_classes]
         return [
@@ -591,8 +590,7 @@ def parse_args(argv):
                  'against'
         )
 
-    args = p.parse_args(argv)
-    return args
+    return p.parse_args(argv)
 
 
 def main():
@@ -613,7 +611,7 @@ def main():
     if args.ACTION == 'accounts':
         accts = ManheimConfig.list_accounts(args.config)
         for acctname in sorted(accts.keys()):
-            print("%s (%s)" % (acctname, accts[acctname]))
+            print(f"{acctname} ({accts[acctname]})")
         raise SystemExit(0)
     cr = CustodianRunner(args.ACCT_NAME, args.config)
     if args.assume_role:
